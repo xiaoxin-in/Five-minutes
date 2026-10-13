@@ -263,8 +263,9 @@ function renderReview(){
 
 /* ============ API ============ */
 async function api(url, method='GET', body){
-  const r=await fetch(url,{method,headers:{'content-type':'application/json'},
-    body:body?JSON.stringify(body):undefined});
+  const opt={method};
+  if(body!==undefined){opt.headers={'content-type':'application/json'};opt.body=JSON.stringify(body);}
+  const r=await fetch(url,opt);
   if(!r.ok){ const e=await r.json().catch(()=>({})); toast('⚠️ '+(e.error||r.status)); return null }
   return r.json();
 }

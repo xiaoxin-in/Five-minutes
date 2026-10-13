@@ -17,18 +17,38 @@ export interface AgentService {
   reply(userText: string): AgentReply;
 }
 
-/** 解析「今晚8点 / 明早9点」等时间表述，返回 epoch ms；解析不出返回 null */
+/** 中文数字 → 阿拉伯数字（支持：八、十、十一、二十三、两、零） */
+function cnNum(s: string): number | null {
+  if (/^\d+$/.test(s)) { const n = Number(s); return n >= 0 && n <= 59 ? n : null; }
+  const M: Record<string, number> = { 零: 0, 一: 1, 二: 2, 两: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 };
+  if (s.length === 1 && s in M) return M[s];
+  const i = s.indexOf('十');
+  if (i === -1) return s.split('').every(c => c in M) ? M[s] : null;
+  const high = i === 0 ? 1 : M[s.slice(0, i)];
+  const low = i === s.length - 1 ? 0 : M[s.slice(i + 1)];
+  if (high === undefined || low === undefined) return null;
+  return high * 10 + low;
+}
+
+/**
+ * 解析时间表述，返回 epoch ms；解析不出返回 null
+ * 支持：今晚8点 / 今晚八点 / 晚上八点半 / 明早七点 / 20:00
+ * 带"晚"前缀且小时 <12 自动转 PM；已过时刻顺延到明天
+ */
 export function parseTime(text: string, now: number): number | null {
-  const m = text.match(/(今晚|今天|明早|明天|明晚)?\s*(\d{1,2})[:点时](\d{2})?/);
+  const m = text.match(/(今晚|晚上|今天|明早|明天|明晚)?\s*([0-9]{1,2}|[一二两三四五六七八九十]{1,3})\s*[:点时]\s*([0-9]{1,2})?\s*(半)?/);
   if (!m) return null;
-  const hour = Number(m[2]), minute = m[3] ? Number(m[3]) : 0;
-  if (hour < 0 || hour > 23 || minute > 59) return null;
+  let hour = cnNum(m[2]);
+  let minute = m[4] ? 30 : (m[3] ? Number(m[3]) : 0);
+  if (hour === null || hour > 23 || minute > 59) return null;
+  const rel = m[1];
+  if (rel && /晚/.test(rel) && hour < 12) hour += 12;   // 今晚八点 → 20 点
+  if (rel === '明早' && hour >= 12) hour -= 12;           // 明早七点按 AM 处理
   const d = new Date(now);
   d.setHours(hour, minute, 0, 0);
-  const rel = m[1];
-  const today = !rel || rel === '今晚' || rel === '今天';
-  if (!today) d.setDate(d.getDate() + 1);          // 明早/明天/明晚
-  if (d.getTime() <= now && today) d.setDate(d.getDate() + 1); // 已过则顺延到明天
+  const tomorrow = rel === '明早' || rel === '明天' || rel === '明晚';
+  if (tomorrow) d.setDate(d.getDate() + 1);
+  if (d.getTime() <= now && !tomorrow) d.setDate(d.getDate() + 1); // 已过则顺延到明天
   return d.getTime();
 }
 
