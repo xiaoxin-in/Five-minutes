@@ -1,0 +1,17 @@
+{
+  "name": "five-minutes",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx server/src/index.ts",
+    "test": "node --import tsx --test server/test/*.test.ts"
+  },
+  "dependencies": {
+    "@esbuild/win32-x64": "^0.28.2",
+    "@types/node": "^22.20.5",
+    "fastify": "^4.29.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
