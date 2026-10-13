@@ -147,8 +147,14 @@ export function buildServer(db: DatabaseSync, opts: { schedulerIntervalMs?: numb
 
   /* ============ 演示：立即触发到期追问 ============ */
   app.post('/api/demo/accelerate', async () => {
-    const n = repo.accelerateAll(db, Date.now());
+    const now = Date.now();
+    const n = repo.accelerateAll(db, now);
     scheduler.tick();
+    if (n === 0) {
+      // 没有可触发的承诺时，Agent 在对话里解释原因（而不是沉默）
+      repo.addMessage(db, 'bot',
+        '现在没有到期的承诺。追问只跟<b>带时间的承诺</b>走——比如对我说「我打算今晚八点跑步」，到点我才会来敲门。', now);
+    }
     return { ok: true, triggered: n };
   });
 

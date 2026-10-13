@@ -132,11 +132,29 @@ test('回归：带 json content-type 的空 body POST 不再 400（旧前端缓�
   }
 });
 
-test('2分钟启动器：大块头任务被拆解并入库', async () => {
-  const r = await post('/api/chat', { text: '我要写论文' });
+test('2分钟启动器：大块头任务被拆解入库，且给出「打开了」选项', async () => {
+  const r = await post('/api/chat', { text: '我要开始写论文' });
   assert.equal(r.statusCode, 200);
-  assert.match(r.json().reply, /5 分钟/);
-  assert.ok(repo.listTasks(db).some(t => t.title.includes('拆解版')));
+  assert.match(r.json().reply, /大块头/);
+  assert.deepEqual(r.json().chips, ['打开了', '还是算了']);
+  assert.ok(repo.listTasks(db).some(t => t.title.includes('打开文档') && t.title.includes('论文')),
+    '应创建拆解后的第一步任务');
+
+  // 点「打开了」→ 完成拆解任务 + 胜利记录
+  const before = repo.countVictoriesSince(db, 0);
+  const r2 = await post('/api/chat', { text: '打开了' });
+  assert.equal(r2.statusCode, 200);
+  assert.equal(repo.countVictoriesSince(db, 0), before + 1);
+});
+
+test('accelerate 无可触发承诺时，Agent 在对话中解释原因', async () => {
+  const before = repo.listMessages(db).length;
+  const r = await post('/api/demo/accelerate');
+  assert.equal(r.statusCode, 200);
+  assert.equal(r.json().triggered, 0);
+  const msgs = repo.listMessages(db);
+  assert.equal(msgs.length, before + 1, '应新增一条 bot 解释消息');
+  assert.match(msgs[msgs.length - 1].content, /带时间的承诺/);
 });
 
 test('口头完成汇报 → 胜利记录 +1', async () => {
