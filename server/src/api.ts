@@ -31,6 +31,13 @@ export function buildServer(db: DatabaseSync, opts: { schedulerIntervalMs?: numb
   const agent = createAgent(db);
   const scheduler = new Scheduler(db, { intervalMs: opts.schedulerIntervalMs ?? 60_000 });
 
+  // 容忍「content-type: application/json + 空 body」的 POST（浏览器旧缓存页面会这样发）
+  app.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
+    const s = body as string;
+    if (!s || !s.trim()) return done(null, {});
+    try { done(null, JSON.parse(s)); } catch (e) { done(e as Error, undefined); }
+  });
+
   /* ============ 状态 ============ */
   app.get('/api/state', async () => {
     const now = Date.now();

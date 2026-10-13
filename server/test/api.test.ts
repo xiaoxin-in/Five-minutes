@@ -121,6 +121,17 @@ test('POST /api/chat 参数校验：空文本 400', async () => {
   assert.equal(r.statusCode, 400);
 });
 
+test('回归：带 json content-type 的空 body POST 不再 400（旧前端缓存兼容）', async () => {
+  for (const url of ['/api/demo/accelerate', '/api/errands/batch']) {
+    const r = await app.inject({
+      method: 'POST', url,
+      headers: { 'content-type': 'application/json' },
+      payload: '',
+    });
+    assert.equal(r.statusCode, 200, `${url} 应接受空 json body`);
+  }
+});
+
 test('2分钟启动器：大块头任务被拆解并入库', async () => {
   const r = await post('/api/chat', { text: '我要写论文' });
   assert.equal(r.statusCode, 200);
