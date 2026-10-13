@@ -21,7 +21,8 @@ export function getTask(db: DatabaseSync, id: number): Task | undefined {
   return db.prepare('SELECT * FROM tasks WHERE id=?').get(id) as Task | undefined;
 }
 export function completeTask(db: DatabaseSync, id: number, now: number): Task | undefined {
-  db.prepare("UPDATE tasks SET status='done', done_at=? WHERE id=? AND status='open'").run(now, id);
+  const r = db.prepare("UPDATE tasks SET status='done', done_at=? WHERE id=? AND status='open'").run(now, id);
+  if (Number(r.changes) === 0) return undefined;
   return getTask(db, id);
 }
 
