@@ -44,6 +44,12 @@ export function latestOpenCommitment(db: DatabaseSync, taskId: number): Commitme
     "SELECT * FROM commitments WHERE task_id=? AND status IN('pending','asked','snoozed') ORDER BY id DESC LIMIT 1"
   ).get(taskId) as Commitment | undefined;
 }
+/** 当前待用户回应的追问（asked 状态） */
+export function latestAskedCommitment(db: DatabaseSync): Commitment | undefined {
+  return db.prepare(
+    "SELECT * FROM commitments WHERE status='asked' ORDER BY id DESC LIMIT 1"
+  ).get() as Commitment | undefined;
+}
 export function updateCommitment(db: DatabaseSync, c: Commitment): void {
   db.prepare('UPDATE commitments SET status=?, followup_count=?, next_action_at=? WHERE id=?')
     .run(c.status, c.followup_count, c.next_action_at, c.id);

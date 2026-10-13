@@ -63,7 +63,8 @@ export class RuleBasedAgent implements AgentService {
     if (/我打算|我要|计划|今晚|明早|明天/.test(t) && /跑步|运动|锻炼|健身|走|跑/.test(t)) {
       const due = parseTime(t, now) ?? now + 2 * 3600 * 1000;
       const hm = new Date(due).toTimeString().slice(0, 5);
-      const dueTxt = due - now > 20 * 3600 * 1000 ? '明天 ' + hm : hm;
+      const sameDay = new Date(due).toDateString() === new Date(now).toDateString();
+      const dueTxt = (sameDay ? '' : '明天 ') + hm;
       return {
         text: `收到。我先记下了：<b>${dueTxt}</b>。<br>启动门槛帮你降一下——目标改成：<b>穿上运动鞋下楼站 5 分钟</b>。跑不跑随意，站够就算赢。<br>到点我来问你，跑不掉的 😏`,
         actions: [

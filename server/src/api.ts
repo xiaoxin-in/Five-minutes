@@ -35,12 +35,15 @@ export function buildServer(db: DatabaseSync, opts: { schedulerIntervalMs?: numb
   app.get('/api/state', async () => {
     const now = Date.now();
     const dayStart = new Date(now); dayStart.setHours(0, 0, 0, 0);
+    const asked = repo.latestAskedCommitment(db);
+    const askedTask = asked ? repo.getTask(db, asked.task_id) : undefined;
     return {
       time: new Date(now).toTimeString().slice(0, 5),
       tasks: repo.listTasks(db),
       errands: repo.listErrands(db),
       messages: repo.listMessages(db),
       victories: repo.listVictories(db),
+      askedCommitment: asked ? { id: asked.id, taskTitle: askedTask?.title ?? '', followupCount: asked.followup_count } : null,
       stats: {
         today: repo.countVictoriesSince(db, dayStart.getTime()),
         total: repo.countVictoriesSince(db, 0),

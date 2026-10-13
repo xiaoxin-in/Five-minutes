@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>5分钟</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --panel:#ffffff; --ink:#2b2926; --sub:#8a857c;
+    --brand:#e8734a; --brand-soft:#fdf0ea; --ok:#4a9e6e; --ok-soft:#eaf5ee;
+    --line:#ece8e0; --radius:18px; --shadow:0 2px 12px rgba(43,41,38,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#e9e6df; color:var(--ink); display:flex; align-items:center; justify-content:center;
+    min-height:100dvh;
+  }
+  .phone{
+    width:390px; height:min(844px,100dvh - 24px); background:var(--bg);
+    border-radius:36px; box-shadow:0 24px 60px rgba(0,0,0,.18), 0 0 0 10px #1f1e1c;
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  @media (max-width:430px){
+    body{background:var(--bg)}
+    .phone{width:100vw; height:100dvh; border-radius:0; box-shadow:none}
+  }
+  .demo-ctl{
+    background:#242220; color:#d8d4cc; display:flex; align-items:center; gap:8px;
+    padding:7px 14px; font-size:12px; flex-shrink:0;
+  }
+  .demo-ctl .clock{font-variant-numeric:tabular-nums; font-weight:600; color:#fff}
+  .demo-ctl button{
+    background:#3a3835; color:#e8e4dc; border:none; border-radius:999px;
+    padding:4px 12px; font-size:12px; cursor:pointer;
+  }
+  .demo-ctl button:hover{background:#4a4844}
+  header{
+    padding:14px 18px 10px; display:flex; align-items:center; gap:12px;
+    background:linear-gradient(180deg,#fff, #f6f4ef); flex-shrink:0;
+  }
+  .avatar{
+    width:42px;height:42px;border-radius:50%; background:linear-gradient(135deg,#e8734a,#e85d8a);
+    display:flex;align-items:center;justify-content:center; font-size:20px; color:#fff;
+  }
+  header .who b{font-size:16px}
+  header .who span{display:block;font-size:11px;color:var(--sub);margin-top:2px}
+  .badge{margin-left:auto;background:var(--brand-soft);color:var(--brand);
+    font-size:11px;padding:4px 10px;border-radius:999px;font-weight:600}
+  main{flex:1; overflow:hidden; position:relative}
+  .page{position:absolute;inset:0;overflow-y:auto;padding:6px 16px 20px;display:none;
+    animation:fadein .25s ease}
+  .page.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .msg{display:flex;gap:10px;margin:14px 0;max-width:88%}
+  .msg .m-ava{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,#e8734a,#e85d8a);color:#fff;font-size:14px;
+    display:flex;align-items:center;justify-content:center}
+  .msg .bubble{
+    background:var(--panel); padding:11px 14px; border-radius:4px 16px 16px 16px;
+    box-shadow:var(--shadow); font-size:14.5px; line-height:1.65;
+  }
+  .msg.me{flex-direction:row-reverse;margin-left:auto}
+  .msg.me .m-ava{display:none}
+  .msg.me .bubble{background:#e2ecf7;border-radius:16px 4px 16px 16px}
+  .msg .t{font-size:10.5px;color:var(--sub);margin-top:4px}
+  .msg.me .t{text-align:right}
+  .bubble b, .bubble .hl{color:var(--brand);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px;max-width:88%}
+  .chips button{
+    border:1.5px solid var(--brand);color:var(--brand);background:#fff;border-radius:999px;
+    padding:6px 14px;font-size:13px;cursor:pointer;transition:all .15s;
+  }
+  .chips button:hover{background:var(--brand);color:#fff}
+  .chips button:disabled{opacity:.4;cursor:default}
+  .composer{flex-shrink:0;padding:10px 14px 14px;background:var(--bg)}
+  .composer .row{display:flex;gap:10px}
+  .composer input{
+    flex:1;border:1.5px solid var(--line);border-radius:999px;background:#fff;
+    padding:11px 18px;font-size:14px;outline:none;transition:border-color .2s;
+  }
+  .composer input:focus{border-color:var(--brand)}
+  .composer .send{
+    width:44px;height:44px;border-radius:50%;border:none;background:var(--brand);
+    color:#fff;font-size:17px;cursor:pointer;transition:transform .15s;
+  }
+  .composer .send:hover{transform:scale(1.06)}
+  .hint{font-size:11px;color:var(--sub);margin-top:8px;text-align:center}
+  nav{flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 0 12px}
+  nav button{
+    flex:1;border:none;background:none;color:var(--sub);font-size:11px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  nav button .ico{font-size:20px;filter:grayscale(1);opacity:.6;transition:all .2s}
+  nav button.active{color:var(--brand);font-weight:600}
+  nav button.active .ico{filter:none;opacity:1;transform:translateY(-2px)}
+  .card{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:16px;margin:12px 0}
+  .card h3{font-size:15px;margin-bottom:4px}
+  .card .desc{font-size:12.5px;color:var(--sub);line-height:1.6}
+  .section-title{font-size:13px;font-weight:700;color:var(--sub);margin:18px 4px 4px;letter-spacing:.5px}
+  .task{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line)}
+  .task:last-child{border-bottom:none}
+  .task .check{width:22px;height:22px;border-radius:8px;border:2px solid #d5d0c7;
+    flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:13px;transition:all .2s}
+  .task.done .check{background:var(--ok);border-color:var(--ok)}
+  .task .body{flex:1;min-width:0}
+  .task .body b{font-size:14px;display:block;font-weight:500;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .task.done .body b{text-decoration:line-through;color:var(--sub)}
+  .task .body span{font-size:11px;color:var(--sub)}
+  .task .q{font-size:10px;padding:2px 8px;border-radius:999px;flex-shrink:0;font-weight:600}
+  .q1{background:#fde8e8;color:#c0392b}.q2{background:#fdf3d7;color:#9c7a12}
+  .q3{background:#e2ecf7;color:#3b6ea5}.q4{background:#eee8f7;color:#7b5ea7}
+  .tiny{font-size:11px;color:var(--brand);margin-left:6px;font-weight:600}
+  .stat-row{display:flex;gap:10px}
+  .stat{flex:1;background:var(--panel);border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{font-size:26px;color:var(--brand);display:block;font-variant-numeric:tabular-nums}
+  .stat span{font-size:11px;color:var(--sub)}
+  .victory{padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .victory:last-child{border-bottom:none}
+  .victory .d{font-size:10.5px;color:var(--sub);float:right}
+  .empty{text-align:center;color:var(--sub);font-size:13px;padding:30px 0}
+  .toast{
+    position:absolute;left:50%;top:80px;transform:translateX(-50%) translateY(-16px);
+    background:rgba(43,41,38,.92);color:#fff;font-size:13px;padding:9px 20px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:all .3s;z-index:50;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="demo-ctl">
+    <span>⏱ 当前</span><span class="clock" id="clock">--:--</span>
+    <button id="btn-acc">演示：立即触发追问</button>
+  </div>
+
+  <header>
+    <div class="avatar">⏱</div>
+    <div class="who"><b>5分钟</b><span id="status">已连接真实后端</span></div>
+    <div class="badge">MVP</div>
+  </header>
+
+  <main>
+    <section class="page active" id="page-chat"></section>
+
+    <section class="page" id="page-todo">
+      <div class="section-title">待办</div>
+      <div class="card" id="task-list"></div>
+      <div class="card" style="background:linear-gradient(135deg,#fdf0ea,#fff)">
+        <h3>🧺 5分钟琐事清单 <span class="tiny" id="errand-n"></span></h3>
+        <div class="desc" id="errand-list"></div>
+        <div class="chips" style="margin-top:12px">
+          <button id="btn-batch">正好有空？干掉这 3 件</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="page" id="page-review">
+      <div class="section-title">统计</div>
+      <div class="stat-row">
+        <div class="stat"><b id="r-today">0</b><span>件事 · 今天</span></div>
+        <div class="stat"><b id="r-week">0</b><span>件事 · 本周</span></div>
+        <div class="stat"><b id="r-total">0</b><span>件事 · 累计</span></div>
+      </div>
+      <div class="section-title">🌱 微小胜利记录</div>
+      <div class="card" id="victory-list"></div>
+    </section>
+    <div class="toast" id="toast"></div>
+  </main>
+
+  <div class="composer">
+    <div class="row">
+      <input id="input" type="text" placeholder="说句话，比如：我打算今晚8点跑步" autocomplete="off">
+      <button class="send" id="send">➤</button>
+    </div>
+    <div class="hint">试试「我打算今晚8点跑步」「我要写论文」；承诺后点顶部按钮触发追问</div>
+  </div>
+
+  <nav>
+    <button class="active" data-page="chat"><span class="ico">💬</span>对话</button>
+    <button data-page="todo"><span class="ico">📋</span>待办</button>
+    <button data-page="review"><span class="ico">🌱</span>回顾</button>
+  </nav>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const chat = $('page-chat');
+let state = { messages: [], tasks: [], errands: [], victories: [], stats: {}, askedCommitment: null };
+let lastMsgId = 0;
+
+function fmtTs(ts){
+  const d = new Date(ts);
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function toast(txt){const t=$('toast');t.textContent=txt;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ============ 渲染 ============ */
+function renderChat(){
+  chat.innerHTML='';
+  for(const m of state.messages){
+    const d=document.createElement('div');
+    d.className='msg'+(m.role==='user'?' me':'');
+    d.innerHTML=(m.role==='user'?'':'<div class="m-ava">⏱</div>')+
+      `<div><div class="bubble">${m.content}</div><div class="t">${fmtTs(m.created_at)}</div></div>`;
+    chat.appendChild(d);
+  }
+  if(state.askedCommitment) renderAskChips(state.askedCommitment);
+  chat.scrollTop=chat.scrollHeight;
+}
+function renderAskChips({id}){
+  const c=document.createElement('div'); c.className='chips';
+  [['start','开始了'],['snooze','再拖 10 分钟'],['giveup','今天算了']].forEach(([choice,label])=>{
+    const b=document.createElement('button'); b.textContent=label;
+    b.onclick=async()=>{
+      c.querySelectorAll('button').forEach(x=>x.disabled=true);
+      await api(`/api/commitments/${id}/respond`,'POST',{choice});
+      await refresh(); toast(choice==='start'?'🎉 启动成功':choice==='snooze'?'⏳ 10分钟后二次敲门':'明天提前提醒你');
+    };
+    c.appendChild(b);
+  });
+  chat.appendChild(c); chat.scrollTop=chat.scrollHeight;
+}
+const Q = ['','重要紧急','重要不急','紧急小事','不急小事'];
+function renderTodo(){
+  const box=$('task-list'); box.innerHTML='';
+  if(!state.tasks.filter(t=>t.kind==='todo').length && !state.errands.length)
+    box.innerHTML='<div class="empty">暂无待办</div>';
+  for(const tk of state.tasks.filter(t=>t.kind==='todo')){
+    const d=document.createElement('div'); d.className='task'+(tk.status==='done'?' done':'');
+    d.innerHTML=`<div class="check">${tk.status==='done'?'✓':''}</div>
+      <div class="body"><b>${tk.title}${tk.is_tiny?'<span class="tiny">5min</span>':''}</b><span>${fmtTs(tk.created_at)} 创建</span></div>
+      <span class="q q${tk.quadrant}">${Q[tk.quadrant]||''}</span>`;
+    if(tk.status!=='done') d.querySelector('.check').onclick=async()=>{
+      await api(`/api/tasks/${tk.id}/complete`,'POST'); await refresh(); toast('✅ 胜利清单 +1');
+    };
+    box.appendChild(d);
+  }
+  const n=state.errands.length;
+  $('errand-n').textContent=n?`还剩 ${n} 件`:'';
+  $('errand-list').innerHTML=n?state.errands.map(e=>'· '+e.title).join('<br>'):'空了！琐事清零 🎉';
+  $('btn-batch').style.display=n>=3?'':'none';
+  $('btn-batch').textContent=`正好有空？干掉这 ${Math.min(3,n)} 件`;
+}
+function renderReview(){
+  $('r-today').textContent=state.stats.today??0;
+  $('r-week').textContent=state.stats.week??0;
+  $('r-total').textContent=state.stats.total??0;
+  const v=$('victory-list');
+  if(!state.victories.length){v.innerHTML='<div class="empty">还没有记录，去完成第一件 5 分钟的事</div>';return}
+  v.innerHTML=state.victories.slice(0,30).map(x=>{
+    const d=new Date(x.created_at);
+    const md=(d.getMonth()+1)+'/'+d.getDate();
+    return `<div class="victory">${x.note}<span class="d">${md}</span></div>`;
+  }).join('');
+}
+
+/* ============ API ============ */
+async function api(url, method='GET', body){
+  const r=await fetch(url,{method,headers:{'content-type':'application/json'},
+    body:body?JSON.stringify(body):undefined});
+  if(!r.ok){ const e=await r.json().catch(()=>({})); toast('⚠️ '+(e.error||r.status)); return null }
+  return r.json();
+}
+async function refresh(){
+  const prevAsked = state.askedCommitment;
+  state=await api('/api/state');
+  $('clock').textContent=state.time;
+  const last=state.messages[state.messages.length-1];
+  if(last && last.id!==lastMsgId){
+    lastMsgId=last.id;
+    if(state.askedCommitment && (!prevAsked || prevAsked.id!==state.askedCommitment.id))
+      toast('⏰ 有新追问，等你回应');
+    renderChat(); renderTodo(); renderReview();
+  }
+  return true;
+}
+async function sendMsg(text){
+  if(!text.trim())return;
+  const r=await api('/api/chat','POST',{text});
+  if(!r)return;
+  await refresh();
+  if(r.chips && r.chips.length) renderStaticChips(r.chips);
+}
+function renderStaticChips(options){
+  const c=document.createElement('div'); c.className='chips';
+  options.forEach(o=>{
+    const b=document.createElement('button'); b.textContent=o;
+    b.onclick=async()=>{c.querySelectorAll('button').forEach(x=>x.disabled=true); await sendMsg(o)};
+    c.appendChild(b);
+  });
+  chat.appendChild(c); chat.scrollTop=chat.scrollHeight;
+}
+
+/* ============ 事件 ============ */
+$('send').onclick=()=>{sendMsg($('input').value); $('input').value=''};
+$('input').addEventListener('keydown',e=>{if(e.key==='Enter'){sendMsg($('input').value);$('input').value=''}});
+$('btn-batch').onclick=async()=>{
+  const r=await api('/api/errands/batch','POST');
+  if(r){await refresh(); toast('🧺 '+(r.cleared||0)+' 件琐事清零'); switchPage('chat')}
+};
+$('btn-acc').onclick=async()=>{
+  const r=await api('/api/demo/accelerate','POST');
+  if(r){await refresh(); toast(r.triggered?('⏰ 已触发 '+r.triggered+' 条追问'):'当前没有待触发的承诺（先去承诺一件事）')}
+};
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-'+name).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>
+    b.classList.toggle('active',b.dataset.page===name));
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchPage(b.dataset.page));
+
+/* ============ 初始化 + 轮询（追问推送的站内降级） ============ */
+(async()=>{
+  state=await api('/api/state');
+  lastMsgId=state.messages.length?state.messages[state.messages.length-1].id:0;
+  renderChat(); renderTodo(); renderReview();
+  $('clock').textContent=state.time;
+  setInterval(refresh, 5000);
+})();
+</script>
+</body>
+</html>

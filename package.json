@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx server/src/index.ts",
-    "test": "node --import tsx --test server/test/*.test.ts"
+    "dev": "node --experimental-sqlite --import tsx server/src/index.ts",
+    "test": "node --experimental-sqlite --import tsx --test server/test/*.test.ts"
   },
   "dependencies": {
     "@esbuild/win32-x64": "^0.28.2",

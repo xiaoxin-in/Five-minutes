@@ -52,6 +52,12 @@ test('完整追问闭环：承诺→到期追问→拖延→二次追问→开�
   const msgs1 = repo.listMessages(db);
   assert.ok(msgs1.some(m => m.role === 'bot' && m.content.includes('开始了吗')), '应写入追问消息');
 
+  // 2b. /api/state 应暴露待回应的追问（前端渲染选项用）
+  const st = (await get('/api/state')).json();
+  assert.ok(st.askedCommitment, 'state 应包含 askedCommitment');
+  assert.equal(st.askedCommitment.id, c.id);
+  assert.match(st.askedCommitment.taskTitle, /运动鞋/);
+
   // 3. 用户选择再拖 10 分钟
   const sn = await post(`/api/commitments/${c.id}/respond`, { choice: 'snooze' });
   assert.equal(sn.statusCode, 200);
