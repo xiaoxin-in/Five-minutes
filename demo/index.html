@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>5分钟 · Demo</title>
+<style>
+  :root{
+    --bg:#f6f4ef; --panel:#ffffff; --ink:#2b2926; --sub:#8a857c;
+    --brand:#e8734a; --brand-soft:#fdf0ea; --ok:#4a9e6e; --ok-soft:#eaf5ee;
+    --warn:#c9a227; --line:#ece8e0; --radius:18px;
+    --shadow:0 2px 12px rgba(43,41,38,.06);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#e9e6df; color:var(--ink); display:flex; align-items:center; justify-content:center;
+    min-height:100dvh;
+  }
+  /* ===== 手机壳 ===== */
+  .phone{
+    width:390px; height:min(844px,100dvh - 24px); background:var(--bg);
+    border-radius:36px; box-shadow:0 24px 60px rgba(0,0,0,.18), 0 0 0 10px #1f1e1c;
+    overflow:hidden; position:relative; display:flex; flex-direction:column;
+  }
+  @media (max-width:430px){
+    body{background:var(--bg)}
+    .phone{width:100vw; height:100dvh; border-radius:0; box-shadow:none}
+  }
+  /* ===== 演示控制条 ===== */
+  .demo-ctl{
+    background:#242220; color:#d8d4cc; display:flex; align-items:center; gap:8px;
+    padding:7px 14px; font-size:12px; flex-shrink:0;
+  }
+  .demo-ctl .clock{font-variant-numeric:tabular-nums; font-weight:600; color:#fff}
+  .demo-ctl button{
+    background:#3a3835; color:#e8e4dc; border:none; border-radius:999px;
+    padding:4px 12px; font-size:12px; cursor:pointer;
+  }
+  .demo-ctl button:hover{background:#4a4844}
+  /* ===== 顶栏 ===== */
+  header{
+    padding:14px 18px 10px; display:flex; align-items:center; gap:12px;
+    background:linear-gradient(180deg,#fff, #f6f4ef); flex-shrink:0;
+  }
+  .avatar{
+    width:42px;height:42px;border-radius:50%; background:linear-gradient(135deg,#e8734a,#e85d8a);
+    display:flex;align-items:center;justify-content:center; font-size:20px; color:#fff;
+  }
+  header .who b{font-size:16px}
+  header .who span{display:block;font-size:11px;color:var(--sub);margin-top:2px}
+  .badge{margin-left:auto;background:var(--brand-soft);color:var(--brand);
+    font-size:11px;padding:4px 10px;border-radius:999px;font-weight:600}
+  /* ===== 页面区 ===== */
+  main{flex:1; overflow:hidden; position:relative}
+  .page{position:absolute;inset:0;overflow-y:auto;padding:6px 16px 20px;display:none;
+    animation:fadein .25s ease}
+  .page.active{display:block}
+  @keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  /* ===== 对话页 ===== */
+  .msg{display:flex;gap:10px;margin:14px 0;max-width:88%}
+  .msg .m-ava{width:30px;height:30px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,#e8734a,#e85d8a);color:#fff;font-size:14px;
+    display:flex;align-items:center;justify-content:center}
+  .msg .bubble{
+    background:var(--panel); padding:11px 14px; border-radius:4px 16px 16px 16px;
+    box-shadow:var(--shadow); font-size:14.5px; line-height:1.65; white-space:pre-wrap;
+  }
+  .msg.me{flex-direction:row-reverse;margin-left:auto}
+  .msg.me .m-ava{background:linear-gradient(135deg,#7aa5d8,#5d8ac9);display:none}
+  .msg.me .bubble{background:#e2ecf7;border-radius:16px 4px 16px 16px}
+  .msg .t{font-size:10.5px;color:var(--sub);margin-top:4px}
+  .msg.me .t{text-align:right}
+  .bubble .hl{color:var(--brand);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px;max-width:88%}
+  .chips button{
+    border:1.5px solid var(--brand);color:var(--brand);background:#fff;border-radius:999px;
+    padding:6px 14px;font-size:13px;cursor:pointer;transition:all .15s;
+  }
+  .chips button:hover{background:var(--brand);color:#fff}
+  .chips button:disabled{opacity:.4;cursor:default}
+  /* ===== 输入区 ===== */
+  .composer{flex-shrink:0;padding:10px 14px 14px;background:var(--bg)}
+  .composer .row{display:flex;gap:10px}
+  .composer input{
+    flex:1;border:1.5px solid var(--line);border-radius:999px;background:#fff;
+    padding:11px 18px;font-size:14px;outline:none;transition:border-color .2s;
+  }
+  .composer input:focus{border-color:var(--brand)}
+  .composer .send{
+    width:44px;height:44px;border-radius:50%;border:none;background:var(--brand);
+    color:#fff;font-size:17px;cursor:pointer;transition:transform .15s;
+  }
+  .composer .send:hover{transform:scale(1.06)}
+  .hint{font-size:11px;color:var(--sub);margin-top:8px;text-align:center}
+  /* ===== 底部导航 ===== */
+  nav{flex-shrink:0;display:flex;background:#fff;border-top:1px solid var(--line);padding:8px 0 12px}
+  nav button{
+    flex:1;border:none;background:none;color:var(--sub);font-size:11px;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;gap:3px;
+  }
+  nav button .ico{font-size:20px;filter:grayscale(1);opacity:.6;transition:all .2s}
+  nav button.active{color:var(--brand);font-weight:600}
+  nav button.active .ico{filter:none;opacity:1;transform:translateY(-2px)}
+  nav button .dot{position:relative}
+  nav button .dot::after{
+    content:attr(data-n);position:absolute;top:-6px;right:-10px;background:#e8433f;color:#fff;
+    font-size:9px;min-width:15px;height:15px;border-radius:999px;display:flex;
+    align-items:center;justify-content:center;padding:0 3px;
+  }
+  /* ===== 卡片通用 ===== */
+  .card{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:16px;margin:12px 0}
+  .card h3{font-size:15px;margin-bottom:4px}
+  .card .desc{font-size:12.5px;color:var(--sub);line-height:1.6}
+  .section-title{font-size:13px;font-weight:700;color:var(--sub);margin:18px 4px 4px;letter-spacing:.5px}
+  /* 待办页 */
+  .task{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--line)}
+  .task:last-child{border-bottom:none}
+  .task .check{width:22px;height:22px;border-radius:8px;border:2px solid #d5d0c7;
+    flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:13px;transition:all .2s}
+  .task.done .check{background:var(--ok);border-color:var(--ok)}
+  .task .body{flex:1;min-width:0}
+  .task .body b{font-size:14px;display:block;font-weight:500;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .task.done .body b{text-decoration:line-through;color:var(--sub)}
+  .task .body span{font-size:11px;color:var(--sub)}
+  .task .q{font-size:10px;padding:2px 8px;border-radius:999px;flex-shrink:0;font-weight:600}
+  .q1{background:#fde8e8;color:#c0392b}.q2{background:#fdf3d7;color:#9c7a12}
+  .q3{background:#e2ecf7;color:#3b6ea5}.q4{background:#eee8f7;color:#7b5ea7}
+  .tiny{font-size:11px;color:var(--brand);margin-left:6px;font-weight:600}
+  /* 回顾页 */
+  .stat-row{display:flex;gap:10px}
+  .stat{flex:1;background:var(--panel);border-radius:14px;padding:14px 10px;text-align:center;box-shadow:var(--shadow)}
+  .stat b{font-size:26px;color:var(--brand);display:block;font-variant-numeric:tabular-nums}
+  .stat span{font-size:11px;color:var(--sub)}
+  .bar-wrap{margin:10px 0 4px}
+  .bar{display:flex;align-items:center;gap:10px;font-size:12px;margin:9px 0}
+  .bar .label{width:74px;color:var(--sub);flex-shrink:0}
+  .bar .track{flex:1;height:8px;background:var(--line);border-radius:999px;overflow:hidden}
+  .bar .fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#e8734a,#e85d8a)}
+  .bar .num{width:56px;text-align:right;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .mirror-row{display:flex;justify-content:space-between;font-size:12.5px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .mirror-row:last-child{border-bottom:none}
+  .mirror-row .est{color:var(--sub)}
+  .mirror-row .act{color:var(--brand);font-weight:600}
+  .toast{
+    position:absolute;left:50%;top:80px;transform:translateX(-50%) translateY(-16px);
+    background:rgba(43,41,38,.92);color:#fff;font-size:13px;padding:9px 20px;border-radius:999px;
+    opacity:0;pointer-events:none;transition:all .3s;z-index:50;white-space:nowrap;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <!-- 演示控制：加速时间以体验"定时追问"闭环 -->
+  <div class="demo-ctl">
+    <span>⏱ 演示时间</span><span class="clock" id="clock">19:20</span>
+    <button id="btn-jump">跳到 20:00（触发追问）</button>
+    <button id="btn-reset">重置</button>
+  </div>
+
+  <header>
+    <div class="avatar">⏱</div>
+    <div class="who"><b>5分钟</b><span id="status">随时待命 · 不催不骂</span></div>
+    <div class="badge">MVP Demo</div>
+  </header>
+
+  <main>
+    <!-- ============ 对话页 ============ -->
+    <section class="page active" id="page-chat"></section>
+
+    <!-- ============ 待办页 ============ -->
+    <section class="page" id="page-todo">
+      <div class="section-title">今天 · 重要的事</div>
+      <div class="card" id="task-list"></div>
+
+      <div class="card" style="background:linear-gradient(135deg,#fdf0ea,#fff)">
+        <h3>🧺 5分钟琐事清单 <span class="tiny" id="errand-n"></span></h3>
+        <div class="desc" id="errand-list"></div>
+        <div class="chips" style="margin-top:12px">
+          <button id="btn-batch">正好有空？干掉这 3 件</button>
+        </div>
+      </div>
+
+      <div class="section-title">藏在后面的"时间照妖镜"</div>
+      <div class="card">
+        <h3>🔍 上次你说"1 小时搞定"的事</h3>
+        <div class="mirror-row"><span class="est">你说：写周报 1 小时</span><span class="act">实际 2.6 小时</span></div>
+        <div class="mirror-row"><span class="est">你说：报税半小时</span><span class="act">实际 3.5 小时</span></div>
+        <div class="mirror-row"><span class="est">你说：体检预约 5 分钟</span><span class="act">实际 5 分钟 ✓</span></div>
+        <div class="desc" style="margin-top:8px">下回你再说"很快就好"，我会轻轻提醒你。</div>
+      </div>
+    </section>
+
+    <!-- ============ 回顾页 ============ -->
+    <section class="page" id="page-review">
+      <div class="section-title">今天你其实完成了</div>
+      <div class="stat-row">
+        <div class="stat"><b id="r-today">2</b><span>件事 · 今天</span></div>
+        <div class="stat"><b>23</b><span>件事 · 本周</span></div>
+        <div class="stat"><b>6.5h</b><span>碎片被利用</span></div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>🌱 微小胜利记录</h3>
+        <div class="desc" style="margin-top:6px">
+          周一：只是打开了论文文档，写了一句标题<br>
+          周二：把拖了 11 天的牙医约上了<br>
+          周三：倒垃圾顺手取了快递 ×2<br>
+          周四：运动鞋穿上了，在楼下走了 10 分钟<br>
+          周五：<span id="r-friday">（今天还没结束——现在去干一件 5 分钟的事？）</span>
+        </div>
+      </div>
+      <div class="section-title">本周时间都去哪了（对比上周）</div>
+      <div class="card">
+        <div class="bar-wrap">
+          <div class="bar"><span class="label">深度工作</span><div class="track"><div class="fill" style="width:62%"></div></div><span class="num">14.2h ↑</span></div>
+          <div class="bar"><span class="label">琐事清零</span><div class="track"><div class="fill" style="width:80%"></div></div><span class="num">31 件 ↑</span></div>
+          <div class="bar"><span class="label">无意识刷手机</span><div class="track"><div class="fill" style="width:34%;background:#c9c4ba"></div></div><span class="num">9.8h ↓</span></div>
+        </div>
+        <div class="desc">数据仅作演示 · 真实版本会从你的完成记录自动统计</div>
+      </div>
+    </section>
+    <div class="toast" id="toast"></div>
+  </main>
+
+  <!-- 输入区 -->
+  <div class="composer" id="composer">
+    <div class="row">
+      <input id="input" type="text" placeholder="说句话，比如：我打算今晚8点跑步" autocomplete="off">
+      <button class="send" id="send">➤</button>
+    </div>
+    <div class="hint">试试输入「我打算…」「写论文」或点上面的时间跳跃按钮</div>
+  </div>
+
+  <nav>
+    <button class="active" data-page="chat"><span class="ico">💬</span>对话</button>
+    <button data-page="todo"><span class="ico dot" data-n="" id="nav-todo">📋</span>待办</button>
+    <button data-page="review"><span class="ico">🌱</span>回顾</button>
+  </nav>
+</div>
+
+<script>
+/* ================= 模拟数据 ================= */
+const state = {
+  time: 19*60+20,
+  running: false,          // 用户声明过“20:00 跑步”
+  started: false,
+  followedUp: false,
+  doneCount: 2,
+  tasks: [
+    {t:"跑步 20 分钟", s:"今晚 20:00 · 已承诺", q:1, tiny:true, done:false},
+    {t:"回导师消息", s:"拖了 2 天 · 只要 3 分钟", q:2, tiny:true, done:false},
+    {t:"给妈妈买生日礼物", s:"周六前 · 重要不紧急", q:2, done:false},
+    {t:"取快递", s:"琐事 · 顺路 5 分钟", q:3, tiny:true, done:false},
+  ],
+  errands: ["取快递","缴电费","预约牙医复查","回导师消息","整理书桌一角"],
+};
+
+const chat = document.getElementById('page-chat');
+const $ = id => document.getElementById(id);
+
+function fmt(m){return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0')}
+function toast(txt){const t=$('toast');t.textContent=txt;t.classList.add('show');
+  clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2200)}
+
+/* ================= 对话渲染 ================= */
+function addMsg(role, html, time){
+  const d=document.createElement('div');
+  d.className='msg'+(role==='me'?' me':'');
+  d.innerHTML=(role==='me'?'':'<div class="m-ava">⏱</div>')+
+    `<div><div class="bubble">${html}</div><div class="t">${time??fmt(state.time)}</div></div>`;
+  chat.appendChild(d); chat.scrollTop=chat.scrollHeight; return d;
+}
+function addChips(options, onPick){
+  const c=document.createElement('div'); c.className='chips';
+  options.forEach(o=>{
+    const b=document.createElement('button'); b.textContent=o;
+    b.onclick=()=>{c.querySelectorAll('button').forEach(x=>x.disabled=true);
+      addMsg('me',o); onPick(o);};
+    c.appendChild(b);
+  });
+  chat.appendChild(c); chat.scrollTop=chat.scrollHeight;
+}
+
+/* 初始对话（预置，展示核心语气） */
+function seedChat(){
+  chat.innerHTML='';
+  addMsg('me','我又废了一整天，啥也没干 😮‍💨');
+  addMsg('bot',`正常。人回避的从来不是任务，是不适感。<br>现在别想“一整天”，想<b class="hl">接下来 5 分钟</b>——去倒杯水回来，我等你。`);
+  addChips(['倒了，回来了'],()=>{
+    addMsg('bot',`好，重启成功 🌱<br>把你心里挂着的那件事告诉我，哪怕它大得吓人。`);
+  });
+}
+
+/* ================= Agent 核心：2分钟启动器 ================= */
+function agentReply(text){
+  const t=text.trim();
+  if(!t) return;
+  addMsg('me',t);
+  if(/我打算|今晚|明天|等.*(再|时候)/.test(t) && /跑步|运动|锻炼|健身/.test(t)){
+    state.running=true; state.started=false; state.followedUp=false;
+    addMsg('bot',`收到。你说的跑步我先记下了：<b class="hl">今晚 20:00</b>。<br>为了降低启动门槛，我把目标改成——<b class="hl">20:00 穿上运动鞋下楼站 5 分钟</b>。跑不跑随意，站够就算赢。<br>到点我来问你，跑不掉的 😏`);
+    addTask({t:"穿上运动鞋下楼站 5 分钟", s:"今晚 20:00 · 已承诺", q:1, tiny:true, done:false});
+    toast('已加入待办 · 20:00 会追问你');
+  } else if(/我打算|我要|计划/.test(t)){
+    addMsg('bot',`收到。这事听起来还比较大，我先帮你拆到<b class="hl">小到不好意思拒绝</b>：<br>👉 第一步只要 5 分钟：<b class="hl">打开它，只做第一小格</b>。<br>做完告诉我，我记进你的胜利清单。`);
+    addTask({t:"（拆解版）"+t.replace(/我打算|我要|计划/g,'').trim().slice(0,10)+" · 第一步", s:"5 分钟启动 · 今天", q:2, tiny:true, done:false});
+    toast('已拆解为 5 分钟启动任务');
+  } else if(/论文|报告|总结|简历|报税|大扫除/.test(t)){
+    addMsg('bot',`这种大块头拖着最正常。不上价值，直接拆：<br>1️⃣ 打开文档（就这一下）<br>2️⃣ 写一句标题/删一句话（随便哪个）<br>3️⃣ 关掉，明天再说也行<br>今天只要走到第 1 步，就赢了。现在打开？`);
+    addChips(['打开了','还是算了'],o=>{
+      if(o==='打开了'){
+        addMsg('bot',`记下了 ✅ 你今天“启动了论文”。<br>别小看这一下——昨天它在你后台挂了 6 天。`);
+        state.doneCount++; refreshStats();
+      }else{
+        addMsg('bot',`行，不逼你。它先在清单里躺着，我只负责在你状态好的时候提醒你一句。`);
+      }
+    });
+  } else if(/完成了|搞定|做完了|干完了/.test(t)){
+    state.doneCount++; refreshStats();
+    addMsg('bot',`记下了 ✅ 胜利清单 +1<br>你今天其实完成了 <b class="hl">${state.doneCount}</b> 件事——不是“啥也没干”。`);
+  } else {
+    addMsg('bot',`嗯，我在。想从一件 5 分钟的小事开始，还是先跟我说说挂着的事？`);
+  }
+}
+
+/* ================= 定时追问闭环（时间跳跃触发） ================= */
+$('btn-jump').onclick=()=>{
+  if(!state.running){ toast('先在对话里说「我打算今晚8点跑步」'); return; }
+  if(state.started){ toast('你已经在跑了，我不打扰 🏃'); return; }
+  state.time=20*60;
+  $('clock').textContent='20:00'; $('status').textContent='承诺检查中…';
+  if(!state.followedUp){
+    state.followedUp=true;
+    addMsg('bot',`⏰ <b>20:00 了。</b>你 40 分钟前说的事：<b class="hl">穿运动鞋下楼站 5 分钟</b>。<br>开始了吗？`);
+    addChips(['开始了','再拖 10 分钟','今天算了'],o=>{
+      if(o==='开始了'){
+        state.started=true; $('status').textContent='跑步进行中 · 干得漂亮';
+        toast('🎉 启动成功 — 这是最难的一步');
+      }else if(o==='再拖 10 分钟'){
+        addMsg('bot',`可以，10 分钟后我再来问一次。这不丢人——你只是把开始时间推迟了 10 分钟，不是取消。`);
+        setTimeout(()=>{ if(!state.started){
+          addMsg('bot',`⏰ 20:10。第二次敲门 🚪 鞋穿了吗？`);
+          addChips(['穿了，下去了','真不行了'],o2=>{
+            if(o2.startsWith('穿')){state.started=true;$('status').textContent='跑步进行中 🏃';toast('🎉 启动成功')}
+            else addMsg('bot',`好，收到，今天翻篇。不自责——明天同一时间我还在。`);
+          });
+        }},3000);
+      }else{
+        addMsg('bot',`收到，今天算了。<br>说清楚一点：<b class="hl">取消一次 ≠ 你是个失败的人</b>。明天 19:50 我提前提醒你，把鞋放门口就行。`);
+        $('status').textContent='明天 19:50 提醒 · 不催不骂';
+      }
+    });
+  }
+};
+
+$('btn-reset').onclick=()=>{location.reload()};
+
+/* ================= 待办页 ================= */
+function renderTasks(){
+  const box=$('task-list'); box.innerHTML='';
+  state.tasks.forEach((tk,i)=>{
+    const d=document.createElement('div'); d.className='task'+(tk.done?' done':'');
+    d.innerHTML=`<div class="check">${tk.done?'✓':''}</div>
+      <div class="body"><b>${tk.t}${tk.tiny?'<span class="tiny">5min</span>':''}</b><span>${tk.s}</span></div>
+      <span class="q q${tk.q}">${['重要紧急','重要不急','紧急小事','不急小事'][tk.q-1]}</span>`;
+    d.querySelector('.check').onclick=()=>{
+      tk.done=!tk.done;
+      if(tk.done){state.doneCount++; refreshStats(); toast('✅ 胜利清单 +1');}
+      else state.doneCount--;
+      renderTasks();
+    };
+    box.appendChild(d);
+  });
+}
+function addTask(tk){state.tasks.unshift(tk); renderTasks();
+  $('nav-todo').dataset.n=state.tasks.filter(t=>!t.done).length;
+  renderErrands();}
+
+function renderErrands(){
+  const n=state.errands.length;
+  $('errand-n').textContent=n?`还剩 ${n} 件`:'';
+  $('errand-list').innerHTML=state.errands.length
+    ? state.errands.map(e=>'· '+e).join('<br>')
+    : '空了！本周琐事清零 🎉';
+  $('btn-batch').style.display = n>=3 ? '' : 'none';
+  $('btn-batch').textContent = n>=3 ? `正好有空？干掉这 ${Math.min(3,n)} 件` : '';
+}
+$('btn-batch').onclick=()=>{
+  const take=state.errands.splice(0,3);
+  state.doneCount+=3; refreshStats();
+  addMsg('bot',`顺手批处理完成 ✅：${take.join('、')}<br>3 件后台挂机任务下线，心理内存 +3。`);
+  renderErrands(); toast('🧺 3 件琐事清零');
+  switchPage('chat');
+};
+
+/* ================= 回顾页 ================= */
+function refreshStats(){
+  $('r-today').textContent=state.doneCount;
+  $('r-friday').innerHTML = state.doneCount>=5
+    ? `今天完成 ${state.doneCount} 件事，周五没有断档 🔥`
+    : `（今天已完成 ${state.doneCount} 件——再干一件 5 分钟的事？）`;
+}
+
+/* ================= 导航 & 输入 ================= */
+function switchPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  $('page-'+name).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>
+    b.classList.toggle('active',b.dataset.page===name));
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>switchPage(b.dataset.page));
+$('send').onclick=()=>{agentReply($('input').value); $('input').value=''};
+$('input').addEventListener('keydown',e=>{if(e.key==='Enter'){agentReply($('input').value);$('input').value=''}});
+
+/* ================= init ================= */
+seedChat(); renderTasks(); renderErrands(); refreshStats();
+</script>
+</body>
+</html>
